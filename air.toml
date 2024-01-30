@@ -1,0 +1,16 @@
+# .air.toml
+
+# Set the working directory of your project
+root = "." 
+
+# Specify the build command
+[build]
+  # Set the main entry file of your application
+  cmd = "main.go"
+
+  # Specify the patterns to watch for changes
+  patterns = ["*.go", "*/**.go"]
+
+# Set environment variables if needed
+# [env]
+#   PORT = "8000"
