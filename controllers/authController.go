@@ -62,14 +62,33 @@ func Login (c *fiber.Ctx)error{
 			"message":"could not login",
 		})
 	}
+	// creating a cookie containing the JWT token and sending it to the client
 	cookie:= fiber.Cookie{
+		//This is the name that will be used to identify this cookie on the client side.
 		Name :"jwt",
 		Value : token,
 		Expires : time.Now().Add(time.Hour*24),
+		//Makes the cookie accessible only through HTTP requests and not accessible through JavaScript. 
 		HTTPOnly: true,
 	}
 	c.Cookie(&cookie)
 	return c.JSON(fiber.Map{
 		"message":"success",
 	})
+}
+func User (c *fiber.Ctx)error{
+	cookie := c.Cookies("jwt")
+	token,err:= jwt.ParseWithClaims(cookie,&jwt.StandardClaims{},func (token *jwt.Token) (interface{}, error) {
+		return []byte(SecretKey),nil
+	})
+	if err != nil{
+		c.Status(fiber.StatusUnauthorized)
+		return c.JSON(fiber.Map{
+			"message":"Unauthorized",
+		})
+	}
+	claims:= token.Claims.(*jwt.StandardClaims)
+	var user models.User
+	database.DB.Where("id= ?",claims.Issuer).First(&user)
+	return c.JSON(user)
 }
