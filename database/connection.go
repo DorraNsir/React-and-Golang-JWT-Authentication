@@ -1,14 +1,17 @@
 package database
 
 import (
-    "gorm.io/gorm"
-    "gorm.io/driver/mysql"
+	"auth-go/models"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
-
+var DB *gorm.DB
 func Connect( ){
-	_ , err:= gorm.Open(mysql.Open("root:@/Auth-go"),&gorm.Config{})
+	connection, err:= gorm.Open(mysql.Open("root:@/Auth-go"),&gorm.Config{})
     if err != nil{
-        panic("could not connect to the database")
+        panic("could not connect to the database" + err.Error())
     }
+    DB=connection
     
+    connection.AutoMigrate(&models.User{})
 }
