@@ -12,10 +12,11 @@ import (
 func main() {
     database.Connect()
     app:=fiber.New()
-    
-    app.Use(cors.New(cors.Config{
-        AllowCredentials: true,
-    }))
+
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "http://localhost:3000", // Change this to your frontend origin
+		AllowCredentials: true,
+	}))
     routes.Setup(app)
     //: This line instructs the web server to start listening on port 8000.
     app.Listen(":8000")

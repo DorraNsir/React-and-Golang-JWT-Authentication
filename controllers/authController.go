@@ -20,6 +20,7 @@ func Register(c *fiber.Ctx) error {
 	password,_ := bcrypt.GenerateFromPassword([]byte(data.Password),14)
 	user:=models.User{
 		Name:data.Name,
+		LastName:data.LastName,
 		Email:data.Email,
 		Password : password,
 	}
@@ -41,6 +42,7 @@ func Login (c *fiber.Ctx)error{
 		c.Status(fiber.StatusNotFound)
 		return c.JSON(fiber.Map{
 			"message":"user not found",
+			
 		})
 	}
 	if err:= bcrypt.CompareHashAndPassword(user.Password,[]byte(data.Password));err!=nil{
@@ -69,12 +71,13 @@ func Login (c *fiber.Ctx)error{
 		Value : token,
 		Expires : time.Now().Add(time.Hour*24),
 		//Makes the cookie accessible only through HTTP requests and not accessible through JavaScript. 
-		HTTPOnly: true,
+		HTTPOnly: false,
 	}
 	c.Cookie(&cookie)
 	return c.JSON(fiber.Map{
 		"message":"success",
 	})
+
 }
 func User (c *fiber.Ctx)error{
 	cookie := c.Cookies("jwt")
@@ -90,7 +93,7 @@ func User (c *fiber.Ctx)error{
 	claims:= token.Claims.(*jwt.StandardClaims)
 	var user models.User
 	database.DB.Where("id= ?",claims.Issuer).First(&user)
-	return c.JSON(user)
+	return c.JSON(user) 
 }
 func Logout (c * fiber.Ctx)error{
 	cookie:= fiber.Cookie{
