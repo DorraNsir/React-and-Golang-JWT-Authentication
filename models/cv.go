@@ -7,14 +7,21 @@ type Education struct {
 	Degree      string    `json:"degree"`
 	Year        string    `json:"year"`
 	Description string    `json:"description"`
-	CVID        uint   // Foreign key
+	CVID        uint      `gorm:"foreignKey"`
+	 // Foreign key
 }
 
 type WorkExperience struct {
 	ID          uint   `gorm:"primaryKey"`
 	ProjectName string `json:"projectName"`
 	Description string `json:"description"`
-	CVID        uint   // Foreign key
+	CVID        uint   `gorm:"foreignKey"`
+}
+type Skills struct{
+	CVID        uint   `gorm:"foreignKey"`
+	ID          uint   `gorm:"primaryKey"`
+	SkillName   string `json:"skill"`
+
 }
 
 type CV struct {
@@ -23,9 +30,9 @@ type CV struct {
 	LastName       string         `json:"lastname"`
 	Email          string         `gorm:"unique" json:"email"`
 	Phone          string         `json:"phone"`
-	Skills         string         `json:"skills"`
 	AboutMe        string         `json:"aboutMe"`
 	Color          string         `json:"color"`
+	Skills         Skills         `json:"skills"`
 	Education      Education      `json:"education"`
 	WorkExperience WorkExperience `json:"workExperience"`
 	

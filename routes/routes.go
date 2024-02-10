@@ -14,5 +14,6 @@ func Setup(app *fiber.App) {
 	app.Post("/api/cv", controllers.CreateCV)
 	app.Get("/api/cv/:id", controllers.GetCV)
 	app.Put("/api/cv/:id", controllers.UpdateCV)
+	app.Delete("/api/cv/:id", controllers.DeleteCV)
 
 }

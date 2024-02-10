@@ -4,6 +4,7 @@ import (
 	"auth-go/models"
 	// "strconv"
 	"time"
+	// "gorm.io/gorm"
 	"github.com/gofiber/fiber/v2"
 	// "golang.org/x/crypto/bcrypt"
 	// "github.com/dgrijalva/jwt-go"
@@ -28,7 +29,6 @@ func CreateCV(c *fiber.Ctx) error {
 			LastName:       data.LastName,
 			Email:          data.Email,
 			Phone:          data.Phone,
-			Skills:         data.Skills,
 			AboutMe:        data.AboutMe,
 			Color:          data.Color,
 			Education: models.Education{
@@ -40,6 +40,9 @@ func CreateCV(c *fiber.Ctx) error {
 			WorkExperience:models.WorkExperience{
 				ProjectName: data.WorkExperience.ProjectName,
 				Description: data.WorkExperience.Description,
+			},
+			Skills:models.Skills{
+				SkillName:data.Skills.SkillName,
 			},
 		}
 	database.DB.Create(&cv)
@@ -80,4 +83,28 @@ func UpdateCV(c *fiber.Ctx) error {
 	}
 	database.DB.Model(&cv).Updates(newCV)
 	return c.JSON(cv)
+}
+func DeleteCV(c *fiber.Ctx) error {
+	id := c.Params("id")
+    // Delete associated Skills
+    if err := database.DB.Where("cv_id = ?", id).Delete(&models.Skills{}).Error; err != nil {
+        return err
+    }
+
+    // Delete associated Education
+    if err := database.DB.Where("cv_id = ?", id).Delete(&models.Education{}).Error; err != nil {
+        return err
+    }
+
+    // Delete associated WorkExperience
+    if err := database.DB.Where("cv_id = ?", id).Delete(&models.WorkExperience{}).Error; err != nil {
+        return err
+    }
+
+    // Finally, delete the CV
+    if err := database.DB.Delete(&models.CV{}, id).Error; err != nil {
+        return err
+    }
+
+    return c.SendString("CV deleted")
 }
