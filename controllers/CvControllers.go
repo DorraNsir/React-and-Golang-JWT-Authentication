@@ -62,3 +62,22 @@ func GetCV(c *fiber.Ctx) error {
 	}
 	return c.JSON(cv)
 }
+
+// Handler to update a CV by ID
+func UpdateCV(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var cv models.CV
+	if err := database.DB.First(&cv, id).Error; err != nil {
+		c.Status(fiber.StatusNotFound)
+		return c.JSON(fiber.Map{
+			"message":"CV not found",
+			
+		})
+	}
+	newCV := new(models.CV)
+	if err := c.BodyParser(newCV); err != nil {
+		return err
+	}
+	database.DB.Model(&cv).Updates(newCV)
+	return c.JSON(cv)
+}
