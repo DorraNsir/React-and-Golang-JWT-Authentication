@@ -107,3 +107,4 @@ func Logout (c * fiber.Ctx)error{
 		"message":"success",
 	})
 }
+
