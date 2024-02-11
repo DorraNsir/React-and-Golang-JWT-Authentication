@@ -25,15 +25,15 @@ type Skills struct{
 }
 
 type CV struct {
+	UserID         uint           `gorm:"foreignKey"`
 	ID             uint           `gorm:"primaryKey"`
 	Name           string         `json:"name"`
 	LastName       string         `json:"lastname"`
-	Email          string         `gorm:"unique" json:"email"`
+	Email          string         ` json:"email"`
 	Phone          string         `json:"phone"`
 	AboutMe        string         `json:"aboutMe"`
 	Color          string         `json:"color"`
 	Skills         Skills         `json:"skills"`
 	Education      Education      `json:"education"`
-	WorkExperience WorkExperience `json:"workExperience"`
-	
+	WorkExperience WorkExperience `json:"workExperience"`	
 }

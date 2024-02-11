@@ -4,12 +4,13 @@ import (
 	"auth-go/models"
 	// "strconv"
 	"time"
+	"fmt"
 	// "gorm.io/gorm"
 	"github.com/gofiber/fiber/v2"
 	// "golang.org/x/crypto/bcrypt"
 	// "github.com/dgrijalva/jwt-go"
 )
-func CreateCV(c *fiber.Ctx) error {
+func CreateCV(c *fiber.Ctx, id uint,name string) error {
 	var data models.CV
 	if err := c.BodyParser(&data); err != nil {
 		return err
@@ -25,7 +26,8 @@ func CreateCV(c *fiber.Ctx) error {
 			yearStr := yearTime.Format("2006-01-02")
 
 		cv := models.CV{
-			Name:           data.Name,
+			UserID: 		id,
+			Name:           name,
 			LastName:       data.LastName,
 			Email:          data.Email,
 			Phone:          data.Phone,
@@ -46,6 +48,7 @@ func CreateCV(c *fiber.Ctx) error {
 			},
 		}
 	database.DB.Create(&cv)
+	fmt.Println("hi")
 	return c.JSON(cv)
 }
 func GetCV(c *fiber.Ctx) error {
@@ -67,23 +70,48 @@ func GetCV(c *fiber.Ctx) error {
 }
 
 // Handler to update a CV by ID
+// func UpdateCV(c *fiber.Ctx) error {
+// 	id := c.Params("id")
+// 	var cv models.CV
+// 	if err := database.DB.First(&cv, id).Error; err != nil {
+// 		c.Status(fiber.StatusNotFound)
+// 		return c.JSON(fiber.Map{
+// 			"message":"CV not found",
+// 		})
+// 	}
+// 	newCV := new(models.CV)
+// 	if err := c.BodyParser(newCV); err != nil {
+// 		return err
+// 	}
+// 	database.DB.Model(&cv).Updates(newCV)
+// 	return c.JSON(cv)
+// }
+// Handler to update a CV by user ID
 func UpdateCV(c *fiber.Ctx) error {
-	id := c.Params("id")
+	// Extract the user ID from the request parameters
+	userID := c.Params("userID")
+
+	// Retrieve the CV associated with the given user ID
 	var cv models.CV
-	if err := database.DB.First(&cv, id).Error; err != nil {
+	if err := database.DB.Where("user_id = ?", userID).First(&cv).Error; err != nil {
 		c.Status(fiber.StatusNotFound)
 		return c.JSON(fiber.Map{
-			"message":"CV not found",
-			
+			"message": "CV not found",
 		})
 	}
-	newCV := new(models.CV)
-	if err := c.BodyParser(newCV); err != nil {
+
+	// Parse the request body to get the updated CV data
+	updatedCV := new(models.CV)
+	if err := c.BodyParser(updatedCV); err != nil {
 		return err
 	}
-	database.DB.Model(&cv).Updates(newCV)
+
+	// Update the retrieved CV with the new data
+	database.DB.Model(&cv).Updates(updatedCV)
+
 	return c.JSON(cv)
 }
+
 func DeleteCV(c *fiber.Ctx) error {
 	id := c.Params("id")
     // Delete associated Skills
