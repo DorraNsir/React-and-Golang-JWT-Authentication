@@ -32,7 +32,7 @@ type CV struct {
 	Phone          string         `json:"phone"`
 	AboutMe        string         `json:"aboutMe"`
 	Color          string         `json:"color"`
-	Skills         Skills         `json:"skills"`
+	Skills         []Skills         `json:"skills"`
 	Education      Education      `json:"education"`
-	WorkExperience WorkExperience `json:"workExperience"`	
+	WorkExperience []WorkExperience `json:"workExperience"`	
 }
