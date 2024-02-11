@@ -2,26 +2,25 @@ package models
 
 // Define database models
 type Education struct {
-	ID          uint      `gorm:"primaryKey"`
-	School      string    `json:"school"`
-	Degree      string    `json:"degree"`
-	Year        string    `json:"year"`
-	Description string    `json:"description"`
-	CVID        uint      `gorm:"foreignKey"`
-	 // Foreign key
+	ID          uint   `gorm:"primaryKey"`
+	School      string `json:"school"`
+	Degree      string `json:"degree"`
+	Year        string `json:"year"`
+	Description string `json:"description"`
+	CVID        uint   `gorm:"foreignKey:CVRefer"` // Specify foreign key column
 }
 
 type WorkExperience struct {
 	ID          uint   `gorm:"primaryKey"`
 	ProjectName string `json:"projectName"`
 	Description string `json:"description"`
-	CVID        uint   `gorm:"foreignKey"`
+	CVID        uint   `gorm:"foreignKey:CVRefer"` // Specify foreign key column
 }
-type Skills struct{
-	CVID        uint   `gorm:"foreignKey"`
-	ID          uint   `gorm:"primaryKey"`
-	SkillName   string `json:"skill"`
 
+type Skills struct {
+	ID        uint   `gorm:"primaryKey"`
+	SkillName string 
+	CVID      uint   `gorm:"foreignKey:CVRefer"` // Specify foreign key column
 }
 
 type CV struct {

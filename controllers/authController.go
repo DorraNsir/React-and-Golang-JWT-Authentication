@@ -8,28 +8,50 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
+	"log"
 )
 const SecretKey="secret"
 func Register(c *fiber.Ctx) error {
-	// var data map[string]string
 	var data models.User
-	//parse the request body and decode it into the data variable
-	if err :=c.BodyParser(&data);err!= nil{
+	if err := c.BodyParser(&data); err != nil {
 		return err
 	}
-	password,_ := bcrypt.GenerateFromPassword([]byte(data.Password),14)
-	user:=models.User{
-		Name:data.Name,
-		LastName:data.LastName,
-		Email:data.Email,
-		Password : password,
+
+	password, err := bcrypt.GenerateFromPassword([]byte(data.Password), 14)
+	if err != nil {
+		// Log the error and return an error response
+		log.Println("Error generating password hash:", err)
+		return err
 	}
-	
-	//This line uses the Create method of the database connection (database.DB) to insert the new user into the database
-	database.DB.Create(&user)
-	CreateCV(c,user.Id,user.Name)
-    return c.JSON(user)
+
+	user := models.User{
+		Name:     data.Name,
+		LastName: data.LastName,
+		Email:    data.Email,
+		Password: password,
+	}
+
+	if err := database.DB.Create(&user).Error; err != nil {
+		// Log the error and return an error response
+		log.Println("Error creating user:", err)
+		return err
+	}
+
+	log.Println("User created successfully")
+
+	// Call CreateCV function
+	if err := CreateCV(c, user.Id, user.Name,user.Email); err != nil {
+		// Log the error and return an error response
+		log.Println("Error creating CV:", err)
+		return err
+	}
+
+	log.Println("CV created successfully")
+
+	// Return a JSON response
+	return c.JSON(user)
 }
+
 func Login (c *fiber.Ctx)error{
 	// var data map[string]string
 	var data models.User

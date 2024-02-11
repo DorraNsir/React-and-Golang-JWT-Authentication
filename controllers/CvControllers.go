@@ -10,33 +10,35 @@ import (
 	// "golang.org/x/crypto/bcrypt"
 	// "github.com/dgrijalva/jwt-go"
 )
-func CreateCV(c *fiber.Ctx, id uint,name string) error {
+func CreateCV(c *fiber.Ctx, id uint,name string,email string) error {
 	var data models.CV
 	if err := c.BodyParser(&data); err != nil {
 		return err
 	}
 		
-			// Parse Year string to time.Time
-			yearTime, err := time.Parse("2006-01-02", data.Education.Year)
-			if err != nil {
-				// Handle error
-				return err
-			}
-			// Convert time.Time back to string in desired format
-			yearStr := yearTime.Format("2006-01-02")
+	// Check if Education Year is provided, if not, set it to an empty string
+	educationYear := ""
+	if data.Education.Year != "" {
+		// If Education Year is provided, parse it
+		yearTime, err := time.Parse("2006-01-02", data.Education.Year)
+		if err != nil {
+			return err
+		}
+		educationYear = yearTime.Format("2006-01-02")
+	}
 
 		cv := models.CV{
 			UserID: 		id,
 			Name:           name,
 			LastName:       data.LastName,
-			Email:          data.Email,
+			Email:          email,
 			Phone:          data.Phone,
 			AboutMe:        data.AboutMe,
 			Color:          data.Color,
 			Education: models.Education{
 				School:      data.Education.School,
 				Degree:      data.Education.Degree,
-				Year:        yearStr , // Assign parsed time.Time object
+				Year:        educationYear , // Assign parsed time.Time object
 				Description: data.Education.Description,
 			},
 			WorkExperience:models.WorkExperience{
@@ -52,23 +54,24 @@ func CreateCV(c *fiber.Ctx, id uint,name string) error {
 	return c.JSON(cv)
 }
 func GetCV(c *fiber.Ctx) error {
-	//Extracting ID from Request Parameters
-	id := c.Params("id")
+	// Extracting UserID from Request Parameters
+	userID := c.Params("userID")
+
 	var cv models.CV
-	//using Preload("Education") and Preload("WorkExperience") ensures that when the CV object is retrieved from the database,
-	// its associated Education and WorkExperience records are also fetched simultaneously.
-	//The First method is used to retrieve the first matching record from the database based on the provided conditions (in this case, the ID)
-	database.DB.Preload("Education").Preload("WorkExperience").First(&cv, id)
-	if cv.ID == 0{
+
+	// Using Where method to filter records based on UserID
+	database.DB.Preload("Education").Preload("WorkExperience").Where("user_id = ?", userID).First(&cv)
+
+	// Check if no CV found for the provided UserID
+	if cv.ID == 0 {
 		c.Status(fiber.StatusNotFound)
 		return c.JSON(fiber.Map{
-			"message":"CV not found",
-			
+			"message": "CV not found",
 		})
 	}
+
 	return c.JSON(cv)
 }
-
 // Handler to update a CV by ID
 // func UpdateCV(c *fiber.Ctx) error {
 // 	id := c.Params("id")
@@ -136,3 +139,63 @@ func DeleteCV(c *fiber.Ctx) error {
 
     return c.SendString("CV deleted")
 }
+// func CreateCV(c *fiber.Ctx,id uint,name string,email string) error {
+// 	var data models.CV
+// 	if err := c.BodyParser(&data); err != nil {
+// 		return err
+// 	}
+
+// 	// Check if Education Year is provided, if not, set it to an empty string
+// 	educationYear := ""
+// 	if data.Education.Year != "" {
+// 		// If Education Year is provided, parse it
+// 		yearTime, err := time.Parse("2006-01-02", data.Education.Year)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		educationYear = yearTime.Format("2006-01-02")
+// 	}
+// 	skills:=models.Skills{
+// 		SkillName: data.Skills.SkillName,
+// 		CVID: data.ID,
+// 	}
+// 	education:=models.Education{
+// 		School:      data.Education.School,
+// 		Degree:      data.Education.Degree,
+// 		Year:        educationYear, // Assign parsed time.Time object or empty string
+// 		Description: data.Education.Description,
+// 		CVID: data.ID,
+// 	}
+// 	work:=models.WorkExperience{
+// 		ProjectName: data.WorkExperience.ProjectName,
+// 		Description: data.WorkExperience.Description,
+// 		CVID: data.ID,
+// 	}
+
+// 	cv := models.CV{
+// 		UserID:         id,
+// 		Name:           name,
+// 		LastName:       data.LastName,
+// 		Email:          email,
+// 		Phone:          data.Phone,
+// 		AboutMe:        data.AboutMe,
+// 		Color:          data.Color,
+// 		Education: 		education,
+// 		WorkExperience: work,
+// 		Skills: 		skills,
+// 	}
+// 	if err := database.DB.Create(&cv).Error; err != nil {
+// 		return err
+// 	}
+// 	if err := database.DB.Create(&work).Error; err != nil {
+// 		return err
+// 	}
+// 	if err := database.DB.Create(&skills).Error; err != nil {
+// 		return err
+// 	}
+// 	if err := database.DB.Create(&education).Error; err != nil {
+// 		return err
+// 	}
+
+// 	return c.JSON(cv)
+// }

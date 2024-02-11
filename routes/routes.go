@@ -11,8 +11,8 @@ func Setup(app *fiber.App) {
 	app.Post("/api/login",controllers.Login)
 	app.Get("/api/user",controllers.User)
 	app.Post("/api/logout",controllers.Logout)
-	// app.Post("/api/cv", controllers.CreateCV)
-	app.Get("/api/cv/:id", controllers.GetCV)
+	// app.Post("/api/cv", controllers.CreateCV) 
+	app.Get("/api/cv/:UserID", controllers.GetCV)
 	app.Patch("/api/cv/:UserID", controllers.UpdateCV)
 	app.Delete("/api/cv/:id", controllers.DeleteCV)
 
