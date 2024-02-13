@@ -3,9 +3,8 @@ package controllers
 import (
 	"auth-go/database"
 	"auth-go/models"
-	// "strconv"
+	"strconv"
 	// "time"
-	
 	"fmt"
 	// "gorm.io/gorm"
 	"github.com/gofiber/fiber/v2"
@@ -37,19 +36,19 @@ func CreateCV(c *fiber.Ctx, id uint,name string,email string) error {
 		}
 		cv := models.CV{
 			UserID:        id,
-			Name:          name,
-			LastName:      "test",
+			Name:          " ",
+			LastName:      " ",
 			Email:         email,
-			Phone:         "test",
-			AboutMe:       "test",
-			Color:         "test",
+			Phone:         " ",
+			AboutMe:       " ",
+			Color:         " ",
 			Skills:        data.Skills,         // Assign skills from data
 			WorkExperience: data.WorkExperience, // Assign work experiences from data
 			Education: models.Education{
-				School:      "test",
-				Degree:      "test",
-				Year:        "test", // Assign parsed time.Time object
-				Description: "test",
+				School:      " ",
+				Degree:      " ",
+				Year:        " ", // Assign parsed time.Time object
+				Description: " ",
 			},
 		}
 	database.DB.Create(&cv)
@@ -76,6 +75,7 @@ func GetCV(c *fiber.Ctx) error {
 
 	return c.JSON(cv)
 }
+
 func UpdateCV(c *fiber.Ctx) error {
     // Extract the user ID from the request parameters
     userID := c.Params("userID")
@@ -94,36 +94,46 @@ func UpdateCV(c *fiber.Ctx) error {
     if err := c.BodyParser(updatedCV); err != nil {
         return err
     }
-	fmt.Println("HELOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
-    // Append new skills and work experiences to the existing CV
-    for _, newSkill := range updatedCV.Skills {
-        // Check if the skill already exists
-        found := false
-        for _, existingSkill := range cv.Skills {
-            if existingSkill.ID == newSkill.ID {
-                existingSkill.SkillName = newSkill.SkillName
-                found = true
-                break
-            }
 
-        }
-        if !found {
-            // If the skill doesn't exist, append it
-            cv.Skills = append(cv.Skills, newSkill)
-			fmt.Println(cv.Skills)
-        }
-    }
-
-    // for _, newWorkExp := range updatedCV.WorkExperience {
-    //     cv.WorkExperience = append(cv.WorkExperience, newWorkExp)
-    // }
     // Update the top-level fields of the retrieved CV with the new data
-    database.DB.Model(&cv).Updates(updatedCV)
-
-    // Update nested fields (Education) individually
+    if err := database.DB.Model(&cv).Updates(updatedCV).Error; err != nil {
+        return err
+    }
+	//     // Update nested fields (Education, WorkExperience, Skills) individually
     if err := database.DB.Model(&cv.Education).Updates(updatedCV.Education).Error; err != nil {
         return err
     }
+
+    // Update nested fields (Skills) individually
+    if updatedCV.Skills != nil {
+        for i := range updatedCV.Skills {
+            if i < len(cv.Skills) {
+                fmt.Println("Updating skill:", updatedCV.Skills[i])
+                if err := database.DB.Model(&cv.Skills[i]).Updates(&updatedCV.Skills[i]).Error; err != nil {
+                    return err
+                }
+            } else {
+                // If the index is out of range, append the new skill
+                fmt.Println("Appending new skill:", updatedCV.Skills[i])
+                cv.Skills = append(cv.Skills, updatedCV.Skills[i])
+            }
+        }
+    }
+	    // Update nested fields (WorkExperience) individually
+		if updatedCV.WorkExperience != nil {
+			for i := range updatedCV.WorkExperience {
+				if i < len(cv.WorkExperience) {
+					fmt.Println("Updating work:", updatedCV.WorkExperience[i])
+					if err := database.DB.Model(&cv.WorkExperience[i]).Updates(&updatedCV.WorkExperience[i]).Error; err != nil {
+						return err
+					}
+				} else {
+					// If the index is out of range, append the new skill
+					fmt.Println("Appending new work:", updatedCV.WorkExperience[i])
+					cv.WorkExperience= append(cv.WorkExperience, updatedCV.WorkExperience[i])
+				}
+			}
+		}
 
     // Save the updated CV back to the database
     if err := database.DB.Save(&cv).Error; err != nil {
@@ -132,45 +142,6 @@ func UpdateCV(c *fiber.Ctx) error {
 
     return c.JSON(cv)
 }
-
-//don't remove this 
-// func UpdateCV(c *fiber.Ctx) error {
-//     // Extract the user ID from the request parameters
-//     userID := c.Params("userID")
-
-//     // Retrieve the CV associated with the given user ID
-//     var cv models.CV
-//     if err := database.DB.Preload("Education").Preload("WorkExperience").Preload("Skills").Where("user_id = ?", userID).First(&cv).Error; err != nil {
-//         c.Status(fiber.StatusNotFound)
-//         return c.JSON(fiber.Map{
-//             "message": "CV not found",
-//         })
-//     }
-
-//     // Parse the request body to get the updated CV data
-//     updatedCV := new(models.CV)
-//     if err := c.BodyParser(updatedCV); err != nil {
-//         return err
-//     }
-
-//     // Update the top-level fields of the retrieved CV with the new data
-//     database.DB.Model(&cv).Updates(updatedCV)
-
-//     // Update nested fields (Education, WorkExperience, Skills) individually
-//     if err := database.DB.Model(&cv.Education).Updates(updatedCV.Education).Error; err != nil {
-//         return err
-//     }
-//     if err := database.DB.Model(&cv.WorkExperience).Updates(updatedCV.WorkExperience).Error; err != nil {
-//         return err
-//     }
-//     if err := database.DB.Model(&cv.Skills).Updates(updatedCV.Skills).Error; err != nil {
-//         return err
-//     }
-
-//     return c.JSON(cv)
-// }
-
-
 func DeleteCV(c *fiber.Ctx) error {
 	id := c.Params("id")
     // Delete associated Skills
@@ -194,5 +165,41 @@ func DeleteCV(c *fiber.Ctx) error {
     }
 
     return c.SendString("CV deleted")
+}
+func DeleteSkillHandler(c *fiber.Ctx) error {
+    // Parse CV ID and skill ID from request parameters
+    cvID := c.Params("cvID")
+    skillID := c.Params("skillID")
+
+    // Retrieve the CV from the database
+    var cv models.CV
+    if err := database.DB.Preload("Skills").First(&cv, cvID).Error; err != nil {
+        return c.Status(fiber.StatusNotFound).SendString("CV not found")
+    }
+
+    // Find the index of the skill in the CV's skills array
+    var skillIndex int = -1
+    for i, skill := range cv.Skills {
+        if strconv.Itoa(int(skill.ID)) == skillID {
+            skillIndex = i
+            break
+        }
+    }
+
+    // Check if the skill was found
+    if skillIndex == -1 {
+        return c.Status(fiber.StatusNotFound).SendString("Skill not found")
+    }
+
+    // Delete the skill from the database
+    if err := database.DB.Delete(&cv.Skills[skillIndex]).Error; err != nil {
+        return err
+    }
+
+    // Remove the skill from the CV's skills slice
+    cv.Skills = append(cv.Skills[:skillIndex], cv.Skills[skillIndex+1:]...)
+
+    // Optionally, respond with a success message
+    return c.SendStatus(fiber.StatusOK)
 }
 

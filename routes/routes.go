@@ -3,6 +3,7 @@ package routes
 import (
 	"auth-go/controllers"
 	"github.com/gofiber/fiber/v2"
+	
 )
 
 func Setup(app *fiber.App) {
@@ -15,5 +16,5 @@ func Setup(app *fiber.App) {
 	app.Get("/api/cv/:UserID", controllers.GetCV)
 	app.Patch("/api/cv/:UserID", controllers.UpdateCV)
 	app.Delete("/api/cv/:id", controllers.DeleteCV)
-
+	app.Delete("/api/cv/:cvID/skills/:skillID", controllers.DeleteSkillHandler)
 }
